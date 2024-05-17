@@ -4,11 +4,12 @@ author: "Garth Tarr"
 institute: "The University of Sydney"
 format:
   revealjs:
-    # self-contained: true
+     # can set self-contained to false if not uploading to Canvas
+     # true makes the HTML files pretty big
+    self-contained: true
     fig-format: retina
     toc: true
     toc-depth: 1
-    number-sections: false
     toc-title: "In this lecture"
     theme: [default, "sydney.scss"]
     code-line-numbers: false
@@ -26,43 +27,42 @@ execute:
 library(tidyverse)
 ```
 
-
 # First section
 
 ## Quarto
 
-:::{.callout-note}
+::: callout-note
 ### Note title
+
 Note text
 :::
 
-:::{.callout-tip}
+::: callout-tip
 ### Tip title
+
 Tip text
 :::
 
-:::{.callout-important}
+::: callout-important
 ### Important title
+
 Important text
 :::
 
-
 ::: notes
-Speaker notes go here. Press `s` to see. 
+Speaker notes go here. Press `s` to see.
 :::
-
 
 ::: footer
-Footers for comments, often with links to further resources. Doesn't show up when printing the slides.
+Footers for comments, or links to further resources. These don't show up when printing the slides to pdf!
 :::
-
 
 ## Asides
 
 > Block quote
 
-- For further details on customisations available see [here](https://quarto.org/docs/presentations/revealjs/)
-- Icons can be included by installing the [fontawesome](https://github.com/quarto-ext/fontawesome) Quarto [extension](https://quarto.org/docs/extensions/).
+-   For further details on customisations available see [here](https://quarto.org/docs/presentations/revealjs/)
+-   Icons can be included by installing the [fontawesome](https://github.com/quarto-ext/fontawesome) Quarto [extension](https://quarto.org/docs/extensions/).
 
 ::: aside
 Asides will be on the slide when printed.
@@ -109,14 +109,14 @@ p1 = iris |> ggplot() +
 p1
 ```
 
-## Plots: hide code
+## Plots: hide code using `echo: false`
 
 ```{r}
 #| echo: false
 p1
 ```
 
-## Plots: auto two column
+## Plots: auto two column using `output-location: column`
 
 ```{r}
 #| output-location: column
@@ -129,8 +129,6 @@ p1 = iris |> ggplot() +
   theme_classic(base_size = 30)
 p1
 ```
-
-
 
 ## Bullets
 
@@ -153,14 +151,13 @@ When you click the **Render** button a presentation will be generated that inclu
 
 ## Handy R package
 
-The [`quartostamp`](https://matt-dray.github.io/quartostamp/index.html) R package provides RStudio "Addins" that make life easier for working with Quarto documents. It has a bunch of templates, e.g. for creating 
+The [`quartostamp`](https://matt-dray.github.io/quartostamp/index.html) R package provides RStudio "Addins" that make life easier for working with Quarto documents. It has a bunch of templates, e.g. for creating
 
-- callout blocks
-- columns
-- tabsets
-- footnotes
-- pauses
-- speaker notes...
-
+-   callout blocks
+-   columns
+-   tabsets
+-   footnotes
+-   pauses
+-   speaker notes...
 
 ## References
