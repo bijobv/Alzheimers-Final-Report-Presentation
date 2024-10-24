@@ -89,7 +89,7 @@ Asides will be on the slide when printed.
 
 ## Columns (more customisable)
 
-::: columns
+::::: columns
 ::: {.column width="40%"}
 Left column
 :::
@@ -97,7 +97,7 @@ Left column
 ::: {.column width="60%"}
 Right column
 :::
-:::
+:::::
 
 ## Plots: below code
 
@@ -151,13 +151,20 @@ When you click the **Render** button a presentation will be generated that inclu
 
 ## Handy R package
 
+To install: install.packages("remotes") \# if not yet installed remotes::install_github("matt-dray/quartostamp")
+
 The [`quartostamp`](https://matt-dray.github.io/quartostamp/index.html) R package provides RStudio "Addins" that make life easier for working with Quarto documents. It has a bunch of templates, e.g. for creating
 
--   callout blocks
--   columns
--   tabsets
--   footnotes
--   pauses
--   speaker notes...
+```{r}
+
+```
+
+::: panel-tabset
+## What
+
+## Is
+
+## This
+:::
 
 ## References
