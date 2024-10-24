@@ -25,10 +25,95 @@ execute:
 
 ```{r, echo = FALSE}
 library(tidyverse)
+library(caret)
+library(ranger)
+library(tree)
 ```
 
 # First section
 
+## Random Forest Model
+
+```{r readsplitdata, message=FALSE}
+
+set.seed(5003)
+
+alzdata <- read.csv("alzheimers_disease_data.csv")
+alzdata$Diagnosis <- factor(alzdata$Diagnosis, levels = c(0, 1), labels = c("No", "Yes"))
+alzdata <- subset(alzdata, select = -c(PatientID, DoctorInCharge))
+
+indices <- createDataPartition(alzdata$Diagnosis, p = 0.7, list = FALSE)
+train_dat <- alzdata[indices,]
+test_dat <- alzdata[-indices, ]
+
+```
+
+``` {r singletree, message=FALSE}
+treemap <- tree(Diagnosis ~ ., data = train_dat)
+plot(treemap)
+text(treemap)
+```
+
+```{r treeseq, message=FALSE}
+ntree_seq <- c(1, 50, 100, 400, 500, 700, 800, 900, 1000, 2000)
+```
+
+```{r rfB, message=FALSE}
+max.ntree_seq <- max(ntree_seq)
+test_diagnosis <- test_dat[["Diagnosis"]]
+ranger_model <- ranger(Diagnosis ~ ., data = train_dat, num.trees = max.ntree_seq)
+rand.forest.function <- function(x) { 
+  predict_ranger <- predict(ranger_model, data = test_dat, num.trees = x)[["predictions"]]
+  CM <- confusionMatrix(test_diagnosis, predict_ranger)
+  Sensit <- CM$byClass[["Sensitivity"]]
+  Specif <- CM$byClass[["Specificity"]]
+  Accura <- CM$overall[["Accuracy"]]
+  TP <- CM$table["Yes", "Yes"]
+  FP <- CM$table["Yes", "No"]
+  FN <- CM$table["No", "Yes"]
+  precision <- TP / (TP + FP)
+  recall <- TP / (TP + FN)
+  F1 <- 2 * (precision * recall) / (precision + recall)
+  Performance_measures <- list(Sensitivity = Sensit, Specificity = Specif, Accuracy = Accura, F1 = F1)
+  }
+perf_measures <- map(ntree_seq, rand.forest.function)
+specificities <- map_dbl(perf_measures, "Specificity")
+plot_data <- data.frame(ntree_seq, specificities)
+ggplot(plot_data, aes(x = ntree_seq, y = specificities)) +
+  geom_line() +
+  geom_point() + 
+  geom_text(aes(label = round(specificities, 4)), 
+            vjust = -0.5, 
+            color = "black", 
+            size = 3.5) +
+  labs(x = "Number of Trees", y = "Specificity") +
+  theme_minimal()
+
+
+perf_measures_df <- map_dfr(ntree_seq, function(x) {
+  perf <- rand.forest.function(x)
+  data.frame(ntree_seq = x,
+             Sensitivity = perf$Sensitivity,
+             Specificity = perf$Specificity,
+             Accuracy = perf$Accuracy,
+             F1 = perf$F1)
+})
+
+# Reshape the data to long format for ggplot2
+perf_measures_long <- perf_measures_df %>%
+  pivot_longer(cols = c(Sensitivity, Specificity, Accuracy, F1),
+               names_to = "Measure",
+               values_to = "Value")
+
+# Create the grouped bar plot
+ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Number of Trees", y = "Value", title = "Performance Measures by Number of Trees") +
+  scale_fill_brewer(palette = "Paired") +  # Use a color palette for better visualization
+  theme_minimal()
+
+
+```
 ## Quarto
 
 ::: callout-note
