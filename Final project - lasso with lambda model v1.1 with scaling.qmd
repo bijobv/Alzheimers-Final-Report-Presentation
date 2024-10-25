@@ -44,15 +44,17 @@ features <- features[features != "Diagnosis"]
 set.seed(123)
 
 # Train/Test split
-train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.8)[[1]]
+train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.6)[[1]]
 train_data <- Azhelmeimer_data[train_indices,-c(1,2)]
 test_data <- Azhelmeimer_data[-train_indices,-c(1,2)]
 
 # Prepare the data matrices for glmnet
 features <- features[-c(1,2)]
 x_train <- as.matrix(train_data[, features])
+x_train <- scale(x_train)
 y_train <- train_data$Diagnosis 
 x_test <- as.matrix(test_data[, features])
+x_test <- scale(x_test)
 y_test <- test_data$Diagnosis
 
 

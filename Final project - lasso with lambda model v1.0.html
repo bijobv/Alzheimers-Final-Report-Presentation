@@ -3355,9 +3355,6 @@ Disorientation           -6.344683e-03           Disorientation</code></pre>
 </div>
 </div>
 <p>This model dramatically reduce the model’s features from 22 to only 5.</p>
-</section>
-<section id="model-performance-on-test-data" class="level2">
-<h2 class="anchored" data-anchor-id="model-performance-on-test-data">Model performance on test data</h2>
 <p>Using the optimal trained model we can now predict the salary of the test dataset and calculate the sqaure root of mean squared error.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the best CV model to predict the test set Salary</span></span>
@@ -3373,12 +3370,59 @@ Disorientation           -6.344683e-03           Disorientation</code></pre>
 <pre><code>Sqaure Root of Mean Squared Error on the test set: 0.38 </code></pre>
 </div>
 </div>
-<p>This model’s RMSE is higher than both method (i) and (ii).</p>
+<p>## Model performance on test data</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required packages</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)  <span class="co"># For confusionMatrix</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Assume x_test and y_test are already defined</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict on the test data using the best lambda from cross-validation</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>predictions_prob <span class="ot">&lt;-</span> <span class="fu">predict</span>(lasso_cv, <span class="at">s =</span> <span class="st">&quot;lambda.min&quot;</span>, <span class="at">newx =</span> x_test, <span class="at">type =</span> <span class="st">&quot;response&quot;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert probabilities to binary class predictions (threshold = 0.5)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(predictions_prob <span class="sc">&gt;=</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert predictions and y_test to factors for caret compatibility</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">factor</span>(predictions, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>y_test <span class="ot">&lt;-</span> <span class="fu">factor</span>(y_test, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Create confusion matrix to get accuracy, sensitivity, and specificity</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>conf_matrix <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(predictions, y_test)</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Display accuracy, sensitivity, specificity</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Accuracy:&quot;</span>, conf_matrix<span class="sc">$</span>overall[<span class="st">&quot;Accuracy&quot;</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Accuracy: 0.8183935 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Sensitivity (Recall):&quot;</span>, conf_matrix<span class="sc">$</span>byClass[<span class="st">&quot;Sensitivity&quot;</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sensitivity (Recall): 0.898524 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Specificity:&quot;</span>, conf_matrix<span class="sc">$</span>byClass[<span class="st">&quot;Specificity&quot;</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Specificity: 0.681388 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Precision:&quot;</span>, conf_matrix<span class="sc">$</span>byClass[<span class="st">&quot;Precision&quot;</span>], <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Precision: 0.8282313 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate F1-score</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>precision <span class="ot">&lt;-</span> conf_matrix<span class="sc">$</span>byClass[<span class="st">&quot;Precision&quot;</span>]</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>recall <span class="ot">&lt;-</span> conf_matrix<span class="sc">$</span>byClass[<span class="st">&quot;Sensitivity&quot;</span>]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>F1_score <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> (precision <span class="sc">*</span> recall) <span class="sc">/</span> (precision <span class="sc">+</span> recall)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;F1 Score:&quot;</span>, F1_score, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>F1 Score: 0.8619469 </code></pre>
+</div>
+</div>
 </section>
 </section>
 <section id="conclusion" class="level1">
 <h1>Conclusion</h1>
-<p>Different feature reduction methods, such as stepwise selection, Lasso regression with stepwise, and Lasso regression using lambda as a tuning parameter, can yield significantly different results when determining the optimal model. Statistically, the Lasso approach is more intuitive and easier to explain. Using the third method—Lasso with various lambda values—the coefficients of each feature are calculated through the glmnet() function, with the results represented in a matrix. This matrix can then be used to generate a graph, visually identifying the optimal lambda value by analyzing the resulting data. The coefficients are plotted to determine the best lambda value, which effectively increases data sparsity, as shown in this report. it resulted in a higher RMSE value <strong>0.38</strong>. If feature reduction is the priority, method (iii) would be the preferred approach.</p>
+<p>I will try using different training / testing mixed to see if the model improved. Using 80/20 mixed, the Square Root of Mean Squared Error on the test is for 70/30 for 60/40</p>
 </section>
 
 </main>
