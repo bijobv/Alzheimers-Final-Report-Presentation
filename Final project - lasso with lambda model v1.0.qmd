@@ -31,13 +31,13 @@ To analyse lasso with lambda approach on shrinking feature space using Azhelmeim
 Azhelmeimer_data <- read.csv("alzheimers_disease_data.csv")
 
 # Remove rows with NA in Diagnosis 
-Azhelmeimer_data <- na.omit(data)
+Azhelmeimer_data <- na.omit(Azhelmeimer_data)
 
 # Using sapply to check the class of each column and retain numeric columns
-Azhelmeimer_data <- Filter(is.numeric, data)
+Azhelmeimer_data <- Filter(is.numeric, Azhelmeimer_data)
 
 # list of features
-features <- colnames(Azhelmeimer_data)
+features <- colnames(Azhelmeimer_data)[-c(1,2)]
 features <- features[features != "Diagnosis"]
 
 # Set seed for reproducibility
@@ -45,8 +45,8 @@ set.seed(123)
 
 # Train/Test split
 train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.6)[[1]]
-train_data <- Azhelmeimer_data[train_indices, ]
-test_data <- Azhelmeimer_data[-train_indices, ]
+train_data <- Azhelmeimer_data[train_indices,-c(1,2)]
+test_data <- Azhelmeimer_data[-train_indices,-c(1,2)]
 
 # Prepare the data matrices for glmnet
 x_train <- as.matrix(train_data[, features])
@@ -58,6 +58,18 @@ y_test <- test_data$Diagnosis
 ```
 
 # Train a Lasso regression model with cross-validation and optimal lambda 
+
+```{r, 2}
+# Train a Lasso regression model with cross-validation to find the optimal lambda
+lasso_cv <- cv.glmnet(x_train, y_train, alpha = 1)  # alpha = 1 for Lasso
+optimal_lambda <- lasso_cv$lambda.min
+
+# Fit the Lasso model using the optimal lambda
+lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = optimal_lambda)
+
+
+```
+
 
 ```{r, 3}
 # Function to calculate RMSE
@@ -199,5 +211,5 @@ This model's RMSE is higher than both method (i) and (ii).
 
 # Conclusion 
 
-Different feature reduction methods, such as stepwise selection, Lasso regression with stepwise, and Lasso regression using lambda as a tuning parameter, can yield significantly different results when determining the optimal model. Statistically, the Lasso approach is more intuitive and easier to explain. Using the third method—Lasso with various lambda values—the coefficients of each feature are calculated through the glmnet() function, with the results represented in a matrix. This matrix can then be used to generate a graph, visually identifying the optimal lambda value by analyzing the resulting data. The coefficients are plotted to determine the best lambda value, which effectively increases data sparsity, as shown in this report. Methods (i) and (ii) produced similar RMSE results **`r sprintf("%.2f",best_rmse)`** in this experiment, whereas method (iii) removed **11** features compared to **5**, though it resulted in a higher RMSE value **`r sprintf("%.2f",sqrt(test_mse))`**. If feature reduction is the priority, method (iii) would be the preferred approach.
+Different feature reduction methods, such as stepwise selection, Lasso regression with stepwise, and Lasso regression using lambda as a tuning parameter, can yield significantly different results when determining the optimal model. Statistically, the Lasso approach is more intuitive and easier to explain. Using the third method—Lasso with various lambda values—the coefficients of each feature are calculated through the glmnet() function, with the results represented in a matrix. This matrix can then be used to generate a graph, visually identifying the optimal lambda value by analyzing the resulting data. The coefficients are plotted to determine the best lambda value, which effectively increases data sparsity, as shown in this report. it resulted in a higher RMSE value **`r sprintf("%.2f",sqrt(test_mse))`**. If feature reduction is the priority, method (iii) would be the preferred approach.
 
