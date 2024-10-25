@@ -49,6 +49,7 @@ train_data <- Azhelmeimer_data[train_indices,-c(1,2)]
 test_data <- Azhelmeimer_data[-train_indices,-c(1,2)]
 
 # Prepare the data matrices for glmnet
+features <- features[-c(1,2)]
 x_train <- as.matrix(train_data[, features])
 y_train <- train_data$Diagnosis 
 x_test <- as.matrix(test_data[, features])
