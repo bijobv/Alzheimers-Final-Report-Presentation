@@ -1,7 +1,6 @@
 ---
-title: "A Quarto reveal.js theme"
-author: "Garth Tarr"
-institute: "The University of Sydney"
+title: "Alzheimers Disease Analysis"
+author: "Bijo Varghese, Hong Fu and Jessica Kentwell"
 format:
   revealjs:
      # can set self-contained to false if not uploading to Canvas
@@ -10,13 +9,14 @@ format:
     fig-format: retina
     toc: true
     toc-depth: 1
-    toc-title: "In this lecture"
+    toc-title: "Contents"
     theme: [default, "sydney.scss"]
     code-line-numbers: false
     slide-number: c
-    scrollable: false
+    scrollable: true
     pdf-max-pages-per-slide: 1
     history: false # don't add each slide to browser history
+    auto-slide: 20000
 bibliography: pres_bib.bib
 csl: apa-old-doi-prefix.csl
 execute:
@@ -30,11 +30,14 @@ library(ranger)
 library(tree)
 ```
 
-# First section
+# Overview
+# The Problem
+# Key Findings
+# Our Approach
 
-## Random Forest Model
+## Single Tree
 
-```{r readsplitdata, message=FALSE}
+```{r readsplitdata, message=FALSE, echo = FALSE}
 
 set.seed(5003)
 
@@ -48,17 +51,43 @@ test_dat <- alzdata[-indices, ]
 
 ```
 
-``` {r singletree, message=FALSE}
+
+::: columns
+::: {.column width="70%"}
+``` {r singletree, message=FALSE, echo=FALSE}
 treemap <- tree(Diagnosis ~ ., data = train_dat)
 plot(treemap)
 text(treemap)
 ```
+:::
 
-```{r treeseq, message=FALSE}
-ntree_seq <- c(1, 50, 100, 400, 500, 700, 800, 900, 1000, 2000)
+::: {.column width="30%"}
+``` {r stcm, echo=FALSE}
+predictiontree <- predict(treemap, newdata = test_dat)
+predicted_labels <- ifelse(predictiontree[, "Yes"] > 0.5, "Yes", "No")
+confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis))
+Sensit1 <- confusion_matrix_singletree$byClass[["Sensitivity"]]
+Specif1 <- confusion_matrix_singletree$byClass[["Specificity"]]
+Accura1 <- confusion_matrix_singletree$overall[["Accuracy"]]
+TP1 <- confusion_matrix_singletree$table["Yes", "Yes"]
+FP1 <- confusion_matrix_singletree$table["Yes", "No"]
+FN1 <- confusion_matrix_singletree$table["No", "Yes"]
+precision1 <- TP1 / (TP1 + FP1)
+recall1 <- TP1 / (TP1 + FN1)
+F1_1 <- 2 * (precision1 * recall1) / (precision1 + recall1)
 ```
+**Sensitivity:** `r round(Sensit1, 4)`
+**Specificity:** `r round(Specif1, 4)`
+**Accuracy:** `r round(Accura1, 4)`<br>
+**F1:** `r round(F1_1, 4)`
+:::
+:::
 
-```{r rfB, message=FALSE}
+
+
+## Random Forest
+```{r rfB, message=FALSE, echo=FALSE}
+ntree_seq <- c(1, 50, 100, 400, 500, 700, 800, 900, 1000, 2000)
 max.ntree_seq <- max(ntree_seq)
 test_diagnosis <- test_dat[["Diagnosis"]]
 ranger_model <- ranger(Diagnosis ~ ., data = train_dat, num.trees = max.ntree_seq)
@@ -114,6 +143,10 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 
 
 ```
+
+# Q&A
+
+
 ## Quarto
 
 ::: callout-note
