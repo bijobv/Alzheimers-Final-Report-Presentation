@@ -36,12 +36,16 @@ library(tree)
 3. Brief dataset description - types of data
 
 # Key Findings
-1. Sensitivity a key performance measure. Explain why?
-2. Majority of models performed
+1. Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
+2. Sensitivity a key performance measure. Explain why?
 3. ::Visual::
-4. Combination of Lasso + Random Forest?
 
 # Our Approach
+1. To find the best performing model, we tested 4 models
+2. Phrase everything relatively
+3. kNN, LDA, RF, Lasso - share simple analogies
+4. Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
+5. We reached our goal (refering to the problem)
 
 ## Single Tree
 
@@ -153,7 +157,15 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 ```
 
 # Challenges
+1. 
+2.
+3.
+ 
+
 # Where to from here?
+1. Synthetic data - caution for using in the real world
+2. Keep an expert in the loop
+
 # Q&A
 
 
