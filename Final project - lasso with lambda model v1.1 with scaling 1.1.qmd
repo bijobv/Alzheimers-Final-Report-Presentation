@@ -1,0 +1,284 @@
+---
+title: "Final Project - Lasso Model with Lambda"
+author: Hong Fu
+
+format:
+    html:
+        embed-resources: true
+        
+---
+
+```{r setup, filename = "Required packages"}
+#| message: false
+library(tidyverse)
+library(caret)
+library(glmnet)
+library(ISLR)
+library(Matrix)
+```
+
+
+
+# Abstract {.tabset .tabset-fade .tabset-pills}
+
+The following model use Lasso with lambda to 1) dimension reduction statistically 2) cross validate performance results 3) display the performance matrix on accuracy, sensitivity, F1-score, 
+
+# Introduction 
+
+To analyse lasso with lambda approach on shrinking feature space using Azhelmeimer data set using 70/30 ratio using a seed (5003)
+
+```{r, setup1}
+Azhelmeimer_data <- read.csv("alzheimers_disease_data.csv")
+
+# Remove rows with NA in Diagnosis 
+Azhelmeimer_data <- na.omit(Azhelmeimer_data)
+
+# Using sapply to check the class of each column and retain numeric columns
+Azhelmeimer_data <- Filter(is.numeric, Azhelmeimer_data)
+
+# list of features
+features <- colnames(Azhelmeimer_data)[-c(1,2)]
+features <- features[features != "Diagnosis"]
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Train/Test split
+train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.7)[[1]]
+train_data <- Azhelmeimer_data[train_indices,-c(1,2)]
+test_data <- Azhelmeimer_data[-train_indices,-c(1,2)]
+
+# Prepare the data matrices for glmnet
+features <- features[-c(1,2)]
+x_train <- as.matrix(train_data[, features])
+x_train <- scale(x_train)
+y_train <- train_data$Diagnosis 
+x_test <- as.matrix(test_data[, features])
+x_test <- scale(x_test)
+y_test <- test_data$Diagnosis
+
+
+```
+
+# Train a Lasso regression model with cross-validation and optimal lambda 
+
+```{r, 2}
+# Train a Lasso regression model with cross-validation to find the optimal lambda
+lasso_cv <- cv.glmnet(x_train, y_train, alpha = 1)  # alpha = 1 for Lasso
+optimal_lambda <- lasso_cv$lambda.min
+
+# Fit the Lasso model using the optimal lambda
+lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = optimal_lambda)
+
+
+```
+
+
+```{r, 3}
+# Function to calculate RMSE
+calc_rmse <- function(model, x_test, y_test) {
+  predictions <- predict(model, x_test)
+  sqrt(mean((y_test - predictions)^2))
+}
+
+# Initial RMSE with the Lasso model using all features
+initial_rmse <- calc_rmse(lasso_model, x_test, y_test)
+cat("Initial RMSE with Lasso regression and all features include is :", sprintf("%.2f",initial_rmse), "\n")
+
+
+```
+## Using stepwise to remove 5 less significant features based on RMSE value 
+
+
+
+# Method (iii) - lasso approach with function of $\lambda$ 
+
+```{r plot}
+# Load necessary libraries
+library(glmnet)
+library(tidyr)
+library(ggplot2)
+
+# Assume x_train and y_train are already defined
+
+# Set a custom lambda grid for a wider range of values
+grid <- 10^seq(8, -2, length = 100)
+
+# Perform cross-validation to find the optimal lambda
+lasso_cv <- cv.glmnet(x_train, y_train, alpha = 1, lambda = grid)
+
+# Extract the best lambda value (lambda.min) and 1 SE
+optimal_lambda <- lasso_cv$lambda.min
+optimal_lambda_1se <- lasso_cv$lambda.1se    # Lambda within 1 SE of the minimum
+
+# Fit the Lasso model using the full lambda grid
+lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = grid)
+lasso_coefs <- coef(lasso_model)
+
+# Extract the coefficients from the Lasso model as a function of lambda
+lasso_coefs <- as.matrix(lasso_coefs)
+
+# Convert the coefficient matrix to a tidy format
+coef_df <- as.data.frame(lasso_coefs)
+
+# Create a 'feature' column for each feature name
+coef_df$feature <- rownames(coef_df)
+
+# Reshape the data to a long format using pivot_longer
+coef_df_long <- coef_df %>%
+  pivot_longer(cols = -feature, names_to = "lambda", values_to = "coefficient")
+
+# Add the correct lambda values (repeated for each feature)
+coef_df_long$lambda <- rep(grid, each = nrow(coef_df))
+
+# Convert 'lambda' to numeric type (it might be a string after pivot_longer)
+coef_df_long$lambda <- as.numeric(coef_df_long$lambda)
+
+# Now create a plot with vertical lines for both optimal_lambda and optimal_lambda_1se
+ggplot(coef_df_long, aes(x = log(lambda), y = coefficient, color = feature)) +
+  geom_line() +
+  labs(title = "Lasso Coefficients as a Function of Lambda",
+       x = "Log(Lambda)", y = "Coefficient Value") +
+  theme_minimal() +
+  
+  # Add vertical line for optimal lambda (lambda.min)
+  geom_vline(xintercept = log(optimal_lambda), color = "blue", linetype = "dashed") +
+  annotate("text", x = log(optimal_lambda), y = max(coef_df_long$coefficient), 
+           label = paste("Optimal Lambda (Min):", round(optimal_lambda, 4)),
+           hjust = 1.2, color = "blue") +
+  
+  # Add vertical line for lambda.1se
+  geom_vline(xintercept = log(optimal_lambda_1se), color = "red", linetype = "dashed") +
+  annotate("text", x = log(optimal_lambda_1se), y = max(coef_df_long$coefficient) * 0.9, 
+           label = paste("Lambda (1SE):", round(optimal_lambda_1se, 4)),
+           hjust = -0.1, color = "red")
+
+```
+
+The first dotted line (blue) is the optimal lambda (min). The second dotted line (red) is the 1 standard devication from the lambda (min). Both value should be used to detemine the optimum RMSE. In this example, optimal lambda min (blue) is the optimimum Log(Lambda) for best result.
+
+## Model's feature coefficients 
+
+Using the coefficients in the best model above and inspect which coefficients have been shrunk to zero i.e, to be removed to reduce a high dimensonal dataset. This is achieved through `cv.glmnet` will return the model fits for each $\lambda$ value. The coefficients for each $\lambda$ value for each features are calcuated and accessed using `cv.out$glmnet.fit$beta`.
+
+```{r}
+# Inspect the coefficients in the best model (at optimal lambda)
+best_model_coefficients <- coef(lasso_cv, s = "lambda.min")
+
+# Convert the sparse matrix of coefficients into a data frame for inspection
+best_model_coefficients_df <- as.data.frame(as.matrix(best_model_coefficients))
+
+# Rename the columns for better readability
+colnames(best_model_coefficients_df) <- c("Coefficient")
+
+# Add the feature names to the data frame
+best_model_coefficients_df$Feature <- rownames(best_model_coefficients_df)
+
+# Display the coefficients that have been shrunk to zero
+zero_coefficients <- best_model_coefficients_df %>% filter(Coefficient == 0)
+
+# Display the coefficients that have been shrunk to zero
+cat("Features with coefficients shrunk to zero:\n")
+print(zero_coefficients)
+
+# Display the non-zero coefficients
+non_zero_coefficients <- best_model_coefficients_df %>% filter(Coefficient != 0)
+
+cat("\nFeatures with non-zero coefficients:\n")
+print(non_zero_coefficients)
+
+```
+
+This model dramatically reduce the model's features from  
+
+
+
+Using the optimal trained model we can now predict the salary of the test dataset and calculate the sqaure root of mean squared error.
+
+
+```{r assessment}
+# Use the best CV model to predict the test set Salary
+# Use the best CV model (with optimal lambda) to predict the Salary on the test set
+test_predictions <- predict(lasso_cv, newx = x_test, s = "lambda.min")
+
+# Calculate the Mean Squared Error (MSE) on the test set
+test_mse <- mean((y_test - test_predictions)^2)
+
+# Display the test MSE
+cat("Sqaure Root of Mean Squared Error on the test set:", sprintf("%.2f",sqrt(test_mse)), "\n")
+
+```
+
+
+ ## Model performance on test data 
+
+```{r, performance}
+# Load required packages
+library(glmnet)
+library(caret)  # For confusionMatrix
+
+# Assume x_test and y_test are already defined
+
+# Predict on the test data using the best lambda from cross-validation
+predictions_prob <- predict(lasso_cv, s = "lambda.min", newx = x_test, type = "response")
+
+# Convert probabilities to binary class predictions (threshold = 0.5)
+predictions <- ifelse(predictions_prob >= 0.5, 1, 0)
+
+# Convert predictions and y_test to factors for caret compatibility
+predictions <- factor(predictions, levels = c(0, 1))
+y_test <- factor(y_test, levels = c(0, 1))
+
+# Create confusion matrix to get accuracy, sensitivity, and specificity
+conf_matrix <- confusionMatrix(predictions, y_test)
+
+# Display accuracy, sensitivity, specificity
+cat("Accuracy:", conf_matrix$overall["Accuracy"], "\n")
+cat("Sensitivity (Recall):", conf_matrix$byClass["Sensitivity"], "\n")
+cat("Specificity:", conf_matrix$byClass["Specificity"], "\n")
+cat("Precision:", conf_matrix$byClass["Precision"], "\n")
+
+# Calculate F1-score
+precision <- conf_matrix$byClass["Precision"]
+recall <- conf_matrix$byClass["Sensitivity"]
+F1_score <- 2 * (precision * recall) / (precision + recall)
+
+cat("F1 Score:", F1_score, "\n")
+
+
+```
+
+
+# Conclusion 
+
+I will try using different training / testing mixed to see if the model improved. Using 80/20 mixed, the Square Root of Mean Squared Error on the test is 
+for 70/30 
+for 60/40 
+
+
+# Training model using lda 
+
+```{r, lda}
+library(caret)
+library(MASS)
+train_data$Diagnosis <- as.factor(train_data$Diagnosis)
+train_data$Diagnosis <- factor(train_data$Diagnosis, levels = c("0","1"), labels = c("No", "Yes"))
+trained_model <- train(Diagnosis ~., data = train_data, method = "lda")
+
+logit_trained_prediction <- predict(trained_model, newdata = train_data) # create the trained model 
+train_confusion_result <- confusionMatrix(data = logit_trained_prediction,reference = train_data[["Diagnosis"]], positive = "Yes")
+
+
+train_confusion_result
+logit_predictions <- predict(trained_model, newdata= test_data) # confirm how good is the trained model using test data
+
+test_data$Diagnosis <- factor(test_data$Diagnosis, levels = c("0","1"), labels = c("No", "Yes")) 
+test_confusion_result <- confusionMatrix(data = logit_predictions, 
+                                         reference = test_data[["Diagnosis"]], positive = "No")
+test_confusion_result
+
+test_confusion_result2 <- confusionMatrix(data = logit_predictions, 
+                                         reference = test_data[["Diagnosis"]], positive = "Yes")
+test_confusion_result2
+```
+
