@@ -8,8 +8,8 @@ editor: visual
 
 ```{r setup, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 # load or install required packages using pacman
-if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-pacman::p_load(tidyverse, reshape2, knitr, RColorBrewer, psych, caret, class, randomForest, ranger, corrplot, data.table, DescTools, ggcorrplot, kable, insight, latticeExtra, lmtest, glmnet, psychTools, purrr, rmarkdown, styler, tidygraph, tidymodels, modelenv, parsnip, vcd, xgboost, lattice, plotly, GGally, cowplot, Hmisc, correlation, PRROC, MLMetrics, heatmaply)
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman"); library(pacman)
+pacman::p_load(tidyverse, reshape2, knitr, RColorBrewer, psych, caret, class, randomForest, ranger, corrplot, data.table, DescTools, ggcorrplot, kable, lmtest, glmnet, rmarkdown, styler, tidymodels, vcd, xgboost, lattice, plotly, GGally, cowplot, Hmisc, correlation, heatmaply, quartostamp, fastDummies, mlflow, MLMetrics)
 ```
 
 ```{r variables, echo=FALSE}
@@ -190,3 +190,49 @@ The model with the highest *Sensitivity* score will be of particular importance 
 However, other metrics should be considered to get a comprehensive understanding of the model's performance, especially in our data set which has imbalanced classes. The *F-1 score* is another metric we will focus on because it is a good balance between our most important metric, *Sensitivity,* and *precision* (positive predicticted value), and is less sensitive to imbalanced classes than metrics like *Accuracy*.
 
 In addition, we will look at feature importance and compare the results given between random forest models, decision tree models and the logistic regression. This will help us get a better understanding of what features are most influential in the model's predictions, which could also have a clinical relevance.
+
+### KNN model
+
+```{r split}
+set.seed(5003)
+train_index <- createDataPartition(knnalzdata$Diagnosis, p = 0.7, list = FALSE)
+train_data <- knnalzdata[train_index, ]
+test_data <- knnalzdata[-train_index, ]
+
+```
+
+```{r tuning}
+library(caret)
+repeatcv <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 10,
+  search = "random", #can also do GRID
+  classProbs = TRUE,
+  summaryFunction = prSummary, #can also do twoclassSummary
+  savePredictions = "all",
+)
+
+knn_grid <- expand.grid(k = c(7, 25, 37, 49, 61, 75, 87, 93, 105, 121, 133, 145, 171, 203, 255, 287))
+```
+
+```{r train_knn}
+
+set.seed(5003)
+knn_model <- train(
+  Diagnosis ~ .,
+  data = train_data,
+  method = "knn",
+  tuneGrid = knn_grid,
+  trControl = repeatcv,
+  preProcess = c("center", "scale")
+)
+
+
+```
+
+```{r predict}
+knn_predictions <- predict(knn_model, newdata = test_data)
+knn_CM <- confusionMatrix(knn_predictions, test_data$Diagnosis, positive = "Alzheimers")
+print(knn_CM)
+```
