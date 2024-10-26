@@ -193,8 +193,14 @@ In addition, we will look at feature importance and compare the results given be
 
 ### KNN model
 
+```{r echo=FALSE}
+knnalzdata <- readRDS("knnalzdata.RDS")
+source("functions.R")
+
+```
+
 ```{r split}
-set.seed(5003)
+set.seed(1510)
 train_index <- createDataPartition(knnalzdata$Diagnosis, p = 0.7, list = FALSE)
 train_data <- knnalzdata[train_index, ]
 test_data <- knnalzdata[-train_index, ]
@@ -202,33 +208,35 @@ test_data <- knnalzdata[-train_index, ]
 ```
 
 ```{r tuning}
-library(caret)
+
 repeatcv <- trainControl(
   method = "repeatedcv",
   number = 10,
-  repeats = 10,
-  search = "random", #can also do GRID
+  repeats = 5,
+  search = "grid", #can also do RANDOM
   classProbs = TRUE,
-  summaryFunction = prSummary, #can also do twoclassSummary
+  summaryFunction = prSummary, #can also do twoClasssummary
   savePredictions = "all",
 )
 
-knn_grid <- expand.grid(k = c(7, 25, 37, 49, 61, 75, 87, 93, 105, 121, 133, 145, 171, 203, 255, 287))
+#knn_grid <- expand.grid(k = c(7, 25, 37, 49, 61, 75, 87, 93, 105, 121, 133, 145, 171, 203, 255, 287))
 ```
 
 ```{r train_knn}
 
-set.seed(5003)
+set.seed(1510)
 knn_model <- train(
   Diagnosis ~ .,
   data = train_data,
   method = "knn",
-  tuneGrid = knn_grid,
+  #tuneGrid = knn_grid,
+  tuneLength = 20,
   trControl = repeatcv,
-  preProcess = c("center", "scale")
+  preProcess = c("center", "scale"),
+  metric = "Recall"
 )
 
-
+saveRDS(knn_model, "knn_model.rds")
 ```
 
 ```{r predict}
