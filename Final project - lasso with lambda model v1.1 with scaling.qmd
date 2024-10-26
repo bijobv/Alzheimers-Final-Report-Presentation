@@ -44,7 +44,7 @@ features <- features[features != "Diagnosis"]
 set.seed(123)
 
 # Train/Test split
-train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.6)[[1]]
+train_indices <- createDataPartition(Azhelmeimer_data$Diagnosis, p = 0.7)[[1]]
 train_data <- Azhelmeimer_data[train_indices,-c(1,2)]
 test_data <- Azhelmeimer_data[-train_indices,-c(1,2)]
 
@@ -189,7 +189,7 @@ print(non_zero_coefficients)
 
 ```
 
-This model dramatically reduce the model's features from 22 to only 5. 
+This model dramatically reduce the model's features from  
 
 
 
@@ -254,4 +254,31 @@ cat("F1 Score:", F1_score, "\n")
 I will try using different training / testing mixed to see if the model improved. Using 80/20 mixed, the Square Root of Mean Squared Error on the test is 
 for 70/30 
 for 60/40 
+
+
+# Training model using lda 
+
+```{r, lda}
+library(caret)
+library(MASS)
+train_data$Diagnosis <- as.factor(train_data$Diagnosis)
+train_data$Diagnosis <- factor(train_data$Diagnosis, levels = c("0","1"), labels = c("No", "Yes"))
+trained_model <- train(Diagnosis ~., data = train_data, method = "lda")
+
+logit_trained_prediction <- predict(trained_model, newdata = train_data) # create the trained model 
+train_confusion_result <- confusionMatrix(data = logit_trained_prediction,reference = train_data[["Diagnosis"]], positive = "Yes")
+
+
+train_confusion_result
+logit_predictions <- predict(trained_model, newdata= test_data) # confirm how good is the trained model using test data
+
+test_data$Diagnosis <- factor(test_data$Diagnosis, levels = c("0","1"), labels = c("No", "Yes")) 
+test_confusion_result <- confusionMatrix(data = logit_predictions, 
+                                         reference = test_data[["Diagnosis"]], positive = "No")
+test_confusion_result
+
+test_confusion_result2 <- confusionMatrix(data = logit_predictions, 
+                                         reference = test_data[["Diagnosis"]], positive = "Yes")
+test_confusion_result2
+```
 
