@@ -9,7 +9,7 @@ editor: visual
 ```{r setup, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 # load or install required packages using pacman
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman"); library(pacman)
-pacman::p_load(tidyverse, reshape2, knitr, RColorBrewer, psych, caret, class, randomForest, ranger, corrplot, data.table, DescTools, ggcorrplot, kable, lmtest, glmnet, rmarkdown, styler, tidymodels, vcd, xgboost, lattice, plotly, GGally, cowplot, Hmisc, correlation, heatmaply, quartostamp, fastDummies, mlflow, MLMetrics)
+pacman::p_load(tidyverse, reshape2, knitr, RColorBrewer, psych, caret, class, randomForest, ranger, corrplot, data.table, DescTools, ggcorrplot, kable, lmtest, glmnet, rmarkdown, styler, tidymodels, vcd, xgboost, lattice, plotly, GGally, cowplot, Hmisc, correlation, heatmaply, quartostamp, fastDummies, mlflow, MLMetrics, pROC, MASS)
 ```
 
 ```{r variables, echo=FALSE}
@@ -244,3 +244,54 @@ knn_predictions <- predict(knn_model, newdata = test_data)
 knn_CM <- confusionMatrix(knn_predictions, test_data$Diagnosis, positive = "Alzheimers")
 print(knn_CM)
 ```
+
+With Diagnosis, Chi square tests show significance for "Behavioural Problems" (`r round(chiBehaviour$statistic, 2)`, p = `r round(chiBehaviour$p.value, 4)`) and "Memory Complaints".
+
+```{r lda}
+
+predictor_vars_traindata <- setdiff(names(train_data), "Diagnosis")
+train_data_predictors <- train_data[, predictor_vars_traindata]
+test_data_predictors <- test_data[, predictor_vars_traindata]
+scale_preprocess <- preProcess(train_data_predictors, method = c("center", "scale"))
+train_data_scaled <- predict(scale_preprocess, train_data_predictors)
+test_data_scaled <- predict(scale_preprocess, test_data_predictors)
+train_data_scaled$Diagnosis <- train_data$Diagnosis
+test_data_scaled$Diagnosis <- test_data$Diagnosis
+
+lda_model <- lda(Diagnosis ~ ., data = train_data_scaled)
+
+lda_pred <- predict(lda_model)$x
+
+
+
+lda_predictions <- predict(lda_model, newdata = test_data_scaled)
+lda_CM <- confusionMatrix(lda_predictions$class, test_data_scaled$Diagnosis, positive = "Alzheimers")
+print(lda_CM)
+
+#coefficients
+lda_coefficients <- lda_model$scaling
+print(lda_coefficients)
+
+```
+
+##### LDA discriminants coefficients
+
++-----------------------+--------+-----------------------------------------------------------+
+| Variable              | LD1    | Col3                                                      |
++=======================+========+===========================================================+
+| Functional Assessment | -0.661 | Lower functional assessment associated with No Alzheimers |
++-----------------------+--------+-----------------------------------------------------------+
+| ADL                   | -0.644 | Lower ADL associated with No Alzheimers                   |
++-----------------------+--------+-----------------------------------------------------------+
+| Memory Complaints     | 0.56   | Memory complaints associated with Alzheimers              |
++-----------------------+--------+-----------------------------------------------------------+
+| Behavioural Problems  |        | Behavioural problems associated with Alzheimers           |
++-----------------------+--------+-----------------------------------------------------------+
+| MMSE                  |        | Lower MMSE scores associated with Alzheimers              |
++-----------------------+--------+-----------------------------------------------------------+
+
+|     |     |     |
+|-----|-----|-----|
+|     |     |     |
+|     |     |     |
+|     |     |     |
