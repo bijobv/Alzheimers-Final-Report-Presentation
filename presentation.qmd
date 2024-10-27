@@ -28,6 +28,9 @@ library(tidyverse)
 library(caret)
 library(ranger)
 library(tree)
+library(glmnet)
+library(ISLR)
+library(Matrix)
 ```
 
 # The Problem
@@ -95,6 +98,9 @@ kable(data, format = "html") %>%
 ## To find the best performing model, we tested 4 models
 ## kNN, LDA, RF, Lasso - share simple analogies
 <img src="valiant-made-UrzN-8K1PCE-unsplash.jpg" class="knn-analogy" />
+
+## Lasso Logistic Regression
+
 
 ## Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
 ## We reached our goal (refering to the problem)
