@@ -31,21 +31,24 @@ library(tree)
 ```
 
 # The Problem
-1. Background on the disease
-2. Goals for the project - correctly identify people with Alzheimers
-3. Brief dataset description - types of data
+
+1.  Background on the disease
+2.  Goals for the project - correctly identify people with Alzheimers
+3.  Brief dataset description - types of data
 
 # Key Findings
-1. Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
-2. Sensitivity a key performance measure. Explain why?
-3. ::Visual::
+
+1.  Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
+2.  Sensitivity a key performance measure. Explain why?
+3.  ::Visual::
 
 # Our Approach
-1. To find the best performing model, we tested 4 models
-2. Phrase everything relatively
-3. kNN, LDA, RF, Lasso - share simple analogies
-4. Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
-5. We reached our goal (refering to the problem)
+
+1.  To find the best performing model, we tested 4 models
+2.  Phrase everything relatively
+3.  kNN, LDA, RF, Lasso - share simple analogies
+4.  Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
+5.  We reached our goal (refering to the problem)
 
 ## Single Tree
 
@@ -63,10 +66,9 @@ test_dat <- alzdata[-indices, ]
 
 ```
 
-
 ::: columns
 ::: {.column width="70%"}
-``` {r singletree, message=FALSE, echo=FALSE}
+```{r singletree, message=FALSE, echo=FALSE}
 treemap <- tree(Diagnosis ~ ., data = train_dat)
 plot(treemap)
 text(treemap)
@@ -74,7 +76,7 @@ text(treemap)
 :::
 
 ::: {.column width="30%"}
-``` {r stcm, echo=FALSE}
+```{r stcm, echo=FALSE}
 predictiontree <- predict(treemap, newdata = test_dat)
 predicted_labels <- ifelse(predictiontree[, "Yes"] > 0.5, "Yes", "No")
 confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis))
@@ -88,16 +90,13 @@ precision1 <- TP1 / (TP1 + FP1)
 recall1 <- TP1 / (TP1 + FN1)
 F1_1 <- 2 * (precision1 * recall1) / (precision1 + recall1)
 ```
-**Sensitivity:** `r round(Sensit1, 4)`
-**Specificity:** `r round(Specif1, 4)`
-**Accuracy:** `r round(Accura1, 4)`<br>
-**F1:** `r round(F1_1, 4)`
+
+**Sensitivity:** `r round(Sensit1, 4)` **Specificity:** `r round(Specif1, 4)` **Accuracy:** `r round(Accura1, 4)`<br> **F1:** `r round(F1_1, 4)`
 :::
 :::
-
-
 
 ## Random Forest
+
 ```{r rfB, message=FALSE, echo=FALSE}
 ntree_seq <- c(1, 50, 100, 400, 500, 700, 800, 900, 1000, 2000)
 max.ntree_seq <- max(ntree_seq)
@@ -157,17 +156,19 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 ```
 
 # Challenges
-1. 
-2.
-3.
- 
+
+1.  
+
+2.  
+
+3.  
 
 # Where to from here?
-1. Synthetic data - caution for using in the real world
-2. Keep an expert in the loop
+
+1.  Synthetic data - caution for using in the real world
+2.  Keep an expert in the loop
 
 # Q&A
-
 
 ## Quarto
 
