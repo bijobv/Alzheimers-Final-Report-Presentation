@@ -53,7 +53,7 @@ library(Matrix)
 
 ## Goal
 <br><br><br><br><br><br><br><br><br>
-To create a **right sized** model with **adequate performance** that predicts if the patient has
+To create a **right sized** model with **adequate performance** that correctly predicts if the patient has
 **Alzheimer's** or **not**.
 
 ## Dataset Description
@@ -67,8 +67,14 @@ To create a **right sized** model with **adequate performance** that predicts if
 - Clinical Measurements
 - Cognitive and Functional Assessments
 - Symptoms
-- Diagnosis Information
+- [Diagnosis Information (Alzheimer's or No Alzheimers)]{.red}
+<br><br><br>
+
+2139 Observations <br>
+33 Features
 :::
+
+
 
 ::: {.column width="60%"}
 ```{r, data_description, fold: true, echo=FALSE, message=FALSE}
@@ -91,19 +97,32 @@ kable(data, format = "html") %>%
 
 # Key Findings
 ## Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
-## Sensitivity a key performance measure. Explain why?
-## ::Visual::
+**Random Forest emerged as the best model with the highest Sensitivity**
+
+- *Sensitivity* score is particularly important, as it indicates the best performance in correctly classifying positive cases. 
+- Our model suggests 96% of the patients with Alzheimer's are correctly identified by our model.
 
 # Our Approach
 ## To find the best performing model, we tested 4 models
-## kNN, LDA, RF, Lasso - share simple analogies
+### Lasso
 <img src="valiant-made-UrzN-8K1PCE-unsplash.jpg" class="knn-analogy" />
+### kNN
+### LDA
+### Random Forest
 
-## Lasso Logistic Regression
 
+## Model Performance Comparison
+### Bar graph of 4 sensitivities measures
 
-## Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
-## We reached our goal (refering to the problem)
+``` {r LLR}
+#Lasso Logistic Regression
+
+```
+
+## We reached our goal
+- Found a right-size model with adequate performance
+- Created a foundational model for early detection
+- Identified key features that are associated with Alzheimer's
 
 ## Single Tree
 
@@ -206,14 +225,15 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 ```
 
 # Challenges
-1. 
-2.
-3.
+- Class imbalance in our dataset (addressed through probability)
+- Limited observation
+- Synthetic data
  
 
-# Where to from here?
-1. Synthetic data - caution for using in the real world
-2. Keep an expert in the loop
+# Pathway for deployment
+1. Acquiring real world data to test further 
+2. Keep a qualified clinical expert in the loop
+3. Investigate additional features associated with Alzheimer's
 
 # Q&A
 
