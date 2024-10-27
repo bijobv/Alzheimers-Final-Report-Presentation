@@ -1,0 +1,19 @@
+Variables,Description,Data Type
+Age,"Age of the patient, ranges from 60 to 90 years.",interval
+Gender,"Gender of the patients, 0: Male, 1: Female",nominal
+BMI,"BMI, ranging from 15 to 40",ratio
+Smoking,"Smoking status, 0: No, 1: Yes",nominal
+AlcoholConsumption,"Weekly alcohol consumption in units, ranging from 0 to 20",ratio
+FamilyHistoryAlzheimers,"Family history of Alzheimer's Disease, 0: No, 1: Yes",nominal
+CardiovascularDisease,"Presence of cardiovascular disease, 0: No, 1: Yes",nominal
+Diabetes,"Presence of diabetes, 0: No, 1: Yes",nominal
+Depression,"Presence of depression, 0: No, 1: Yes",nominal
+HeadInjury,"History of head injury, 0: No, 1: Yes",nominal
+Hypertension,"Presence of hypertension, 0: No, 1: Yes",nominal 
+FunctionalAssessment,"Functional assessment score, ranging from 0 to 10. Lower scores indicate greater impairment.",ordinal 
+BehavioralProblems,"Presence of behavioral problems, 0: No, 1: Yes",nominal
+Confusion,"Presence of confusion, 0: No, 1: Yes",nominal
+Disorientation,"Presence of disorientation, 0: No, 1: Yes",nominal
+DifficultyCompletingTasks,"Presence of difficulty completing tasks, 0: No, 1: Yes",nominal
+Forgetfulness,"Presence of forgetfulness, 0: No, 1: Yes",nominal
+Diagnosis ,"Diagnosis status for Alzheimer's Disease, 0: No, 1: Yes",nominal

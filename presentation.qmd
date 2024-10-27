@@ -31,21 +31,73 @@ library(tree)
 ```
 
 # The Problem
-1. Background on the disease
-2. Goals for the project - correctly identify people with Alzheimers
-3. Brief dataset description - types of data
+## Background
+::: columns
+::: {.column width="50%"}
+- 1 in 3 older adult dies with Alzheimer's*
+- Exact cause is not fully understood
+- Early detection is critical
+:::
+
+::: {.column width="50%"}
+<img src="danie-franco-Zi8-E3qJ_RM-unsplash.jpg" class="background-image1" />
+:::
+:::
+
+::: footer
+*According to Alzheimer's Association in 2024
+:::
+
+## Goal
+<br><br><br><br><br><br><br><br><br>
+To create a **right sized** model with **adequate performance** that predicts if the patient has
+**Alzheimer's** or **not**.
+
+## Dataset Description
+
+::: columns
+::: {.column width="40%"}
+- Patient Information
+  - Demographic Details
+  - Lifestyle Factors
+- Medical History
+- Clinical Measurements
+- Cognitive and Functional Assessments
+- Symptoms
+- Diagnosis Information
+:::
+
+::: {.column width="60%"}
+```{r, data_description, fold: true, echo=FALSE, message=FALSE}
+
+# Load required libraries
+library(readr)   # To read CSV files
+library(knitr)   # To format tables in a nice layout
+library(kableExtra)
+
+# Read the CSV file into a dataframe
+data <- read_csv("dataset_description_Full.csv", show_col_types = FALSE)
+
+kable(data, format = "html") %>%
+  kable_styling() %>%
+  column_spec(1:ncol(data), extra_css = "font-size: 9px;") %>%  # Font size for table body
+  row_spec(0, extra_css = "font-size: 9px;")  # Font size for headers (row 0)
+```
+:::
+:::
 
 # Key Findings
-1. Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
-2. Sensitivity a key performance measure. Explain why?
-3. ::Visual::
+## Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
+## Sensitivity a key performance measure. Explain why?
+## ::Visual::
 
 # Our Approach
-1. To find the best performing model, we tested 4 models
-2. Phrase everything relatively
-3. kNN, LDA, RF, Lasso - share simple analogies
-4. Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
-5. We reached our goal (refering to the problem)
+## To find the best performing model, we tested 4 models
+## kNN, LDA, RF, Lasso - share simple analogies
+<img src="valiant-made-UrzN-8K1PCE-unsplash.jpg" class="knn-analogy" />
+
+## Sensitivity comparison visual for the 4 models on the test data. Underline the significance for choosing senstivity
+## We reached our goal (refering to the problem)
 
 ## Single Tree
 
@@ -53,9 +105,9 @@ library(tree)
 
 set.seed(5003)
 
-alzdata <- read.csv("alzheimers_disease_data.csv")
-alzdata$Diagnosis <- factor(alzdata$Diagnosis, levels = c(0, 1), labels = c("No", "Yes"))
-alzdata <- subset(alzdata, select = -c(PatientID, DoctorInCharge))
+alzdata <- readRDS("alzdata.rds")
+#alzdata$Diagnosis <- factor(alzdata$Diagnosis, levels = c(0, 1), labels = c("No", "Yes"))
+#alzdata <- subset(alzdata, select = -c(PatientID, DoctorInCharge))
 
 indices <- createDataPartition(alzdata$Diagnosis, p = 0.7, list = FALSE)
 train_dat <- alzdata[indices,]
@@ -63,37 +115,28 @@ test_dat <- alzdata[-indices, ]
 
 ```
 
-
-::: columns
-::: {.column width="70%"}
 ``` {r singletree, message=FALSE, echo=FALSE}
 treemap <- tree(Diagnosis ~ ., data = train_dat)
+treemap$frame$yval <- ifelse(treemap$frame$yval == "Alzheimers", "Yes", "No")
 plot(treemap)
 text(treemap)
 ```
-:::
 
-::: {.column width="30%"}
-``` {r stcm, echo=FALSE}
+``` {r stcm, echo=FALSE, message=FALSE, warning=FALSE}
 predictiontree <- predict(treemap, newdata = test_dat)
-predicted_labels <- ifelse(predictiontree[, "Yes"] > 0.5, "Yes", "No")
+predicted_labels <- ifelse(predictiontree[, "Alzheimers"] > 0.5, "Alzheimers", "No_Alzheimers")
 confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis))
 Sensit1 <- confusion_matrix_singletree$byClass[["Sensitivity"]]
 Specif1 <- confusion_matrix_singletree$byClass[["Specificity"]]
 Accura1 <- confusion_matrix_singletree$overall[["Accuracy"]]
-TP1 <- confusion_matrix_singletree$table["Yes", "Yes"]
-FP1 <- confusion_matrix_singletree$table["Yes", "No"]
-FN1 <- confusion_matrix_singletree$table["No", "Yes"]
+TP1 <- confusion_matrix_singletree$table["Alzheimers", "Alzheimers"]
+FP1 <- confusion_matrix_singletree$table["Alzheimers", "No_Alzheimers"]
+FN1 <- confusion_matrix_singletree$table["No_Alzheimers", "Alzheimers"]
 precision1 <- TP1 / (TP1 + FP1)
 recall1 <- TP1 / (TP1 + FN1)
 F1_1 <- 2 * (precision1 * recall1) / (precision1 + recall1)
 ```
-**Sensitivity:** `r round(Sensit1, 4)`
-**Specificity:** `r round(Specif1, 4)`
-**Accuracy:** `r round(Accura1, 4)`<br>
-**F1:** `r round(F1_1, 4)`
-:::
-:::
+**Sensitivity:** `r round(Sensit1, 4)`   |   **Specificity:** `r round(Specif1, 4)` |  **Accuracy:** `r round(Accura1, 4)` | **F1:** `r round(F1_1, 4)`
 
 
 
@@ -109,25 +152,25 @@ rand.forest.function <- function(x) {
   Sensit <- CM$byClass[["Sensitivity"]]
   Specif <- CM$byClass[["Specificity"]]
   Accura <- CM$overall[["Accuracy"]]
-  TP <- CM$table["Yes", "Yes"]
-  FP <- CM$table["Yes", "No"]
-  FN <- CM$table["No", "Yes"]
+  TP <- CM$table["Alzheimers", "Alzheimers"]
+  FP <- CM$table["Alzheimers", "No_Alzheimers"]
+  FN <- CM$table["No_Alzheimers", "Alzheimers"]
   precision <- TP / (TP + FP)
   recall <- TP / (TP + FN)
   F1 <- 2 * (precision * recall) / (precision + recall)
   Performance_measures <- list(Sensitivity = Sensit, Specificity = Specif, Accuracy = Accura, F1 = F1)
   }
 perf_measures <- map(ntree_seq, rand.forest.function)
-specificities <- map_dbl(perf_measures, "Specificity")
-plot_data <- data.frame(ntree_seq, specificities)
-ggplot(plot_data, aes(x = ntree_seq, y = specificities)) +
+sensitivities <- map_dbl(perf_measures, "Sensitivity")
+plot_data <- data.frame(ntree_seq, sensitivities)
+lineplot <- ggplot(plot_data, aes(x = ntree_seq, y = sensitivities)) +
   geom_line() +
   geom_point() + 
-  geom_text(aes(label = round(specificities, 4)), 
+  geom_text(aes(label = round(sensitivities, 4)), 
             vjust = -0.5, 
             color = "black", 
             size = 3.5) +
-  labs(x = "Number of Trees", y = "Specificity") +
+  labs(x = "Number of Trees", y = "Sensitivity") +
   theme_minimal()
 
 
@@ -149,8 +192,8 @@ perf_measures_long <- perf_measures_df %>%
 # Create the grouped bar plot
 ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Number of Trees", y = "Value", title = "Performance Measures by Number of Trees") +
-  scale_fill_brewer(palette = "Paired") +  # Use a color palette for better visualization
+  labs(x = "Number of Trees", y = "Value") +
+  scale_fill_manual(values = c("#E09F3E", "#335C67", "#99A88C", "#E3DED1")) + 
   theme_minimal()
 
 
@@ -197,16 +240,6 @@ Speaker notes go here. Press `s` to see.
 Footers for comments, or links to further resources. These don't show up when printing the slides to pdf!
 :::
 
-## Asides
-
-> Block quote
-
--   For further details on customisations available see [here](https://quarto.org/docs/presentations/revealjs/)
--   Icons can be included by installing the [fontawesome](https://github.com/quarto-ext/fontawesome) Quarto [extension](https://quarto.org/docs/extensions/).
-
-::: aside
-Asides will be on the slide when printed.
-:::
 
 # Layouts
 
