@@ -23,7 +23,7 @@ execute:
   echo: true
 ---
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(caret)
 library(ranger)
@@ -31,12 +31,15 @@ library(tree)
 library(glmnet)
 library(ISLR)
 library(Matrix)
+library(ggplot2)
 ```
 
 # The Problem
 ## Background
 ::: columns
 ::: {.column width="50%"}
+<br><br><br><br><br>
+
 - 1 in 3 older adult dies with Alzheimer's*
 - Exact cause is not fully understood
 - Early detection is critical
@@ -48,32 +51,33 @@ library(Matrix)
 :::
 
 ::: footer
-*According to Alzheimer's Association in 2024
+*According to Alzheimer's Association, 2024
 :::
 
 ## Goal
-<br><br><br><br><br><br><br><br><br>
-To create a **right sized** model with **adequate performance** that correctly predicts if the patient has
-**Alzheimer's** or **not**.
+<br><br><br><br><br><br><br><br>
+
+### To create a [right sized]{.red} model with [adequate performance]{.red} that correctly predicts if the patient has [Alzheimer's]{.red} or [not]{.red}.
 
 ## Dataset Description
 
 ::: columns
-::: {.column width="40%"}
+::: {.column width="37%"}
 - Patient Information
   - Demographic Details
   - Lifestyle Factors
 - Medical History
 - Clinical Measurements
-- Cognitive and Functional Assessments
+- Cognitive & Functional Assessments
 - Symptoms
-- [Diagnosis Information (Alzheimer's or No Alzheimers)]{.red}
-<br><br><br>
+- [Diagnosis Information <br>(Alzheimer's or No Alzheimers)]{.red}
+<br><br><br><br><br>
 
-2139 Observations <br>
-33 Features
+**2139** Observations <br>
+**33** Features
 :::
-
+::: {.column width="3%"}
+:::
 
 
 ::: {.column width="60%"}
@@ -96,60 +100,73 @@ kable(data, format = "html") %>%
 :::
 
 # Key Findings
-## Announce the best model - simple terms ?? Combination of Lasso + Random Forest??
-**Random Forest emerged as the best model with the highest Sensitivity**
+## The Best Solution
+<br><br><br><br><br>
 
-- *Sensitivity* score is particularly important, as it indicates the best performance in correctly classifying positive cases. 
-- Our model suggests 96% of the patients with Alzheimer's are correctly identified by our model.
+**[Random Forest]{.red}** emerged as the best model with the highest Sensitivity
+
+- **Sensitivity** score is particularly important - indicates the performance in correctly classifying positive cases. 
+- **96%** of the patients with Alzheimer's are correctly identified by our model.
 
 # Our Approach
-## To find the best performing model, we tested 4 models
-### Lasso
-<img src="valiant-made-UrzN-8K1PCE-unsplash.jpg" class="knn-analogy" />
-### kNN
-### LDA
-### Random Forest
+## Four Models Tested
 
+::: columns
+::: {.column width="50%"}
+#### Lasso
+<img src="Lasso.jpg" class="knn-analogy" />
 
-## Model Performance Comparison
-### Bar graph of 4 sensitivities measures
+#### $k$NN
+<img src="kNN.jpg" class="knn-analogy" />
+:::
 
-``` {r LLR}
-#Lasso Logistic Regression
+::: {.column width="50%"}
+#### LDA
+<img src="LDA.jpg" class="knn-analogy" />
 
-```
+#### Random Forest
+<img src="Random_Forest.jpg" class="knn-analogy" />
+:::
+:::
 
-## We reached our goal
-- Found a right-size model with adequate performance
-- Created a foundational model for early detection
-- Identified key features that are associated with Alzheimer's
 
 ## Single Tree
-
 ```{r readsplitdata, message=FALSE, echo = FALSE}
 
 set.seed(5003)
 
 alzdata <- readRDS("alzdata.rds")
-#alzdata$Diagnosis <- factor(alzdata$Diagnosis, levels = c(0, 1), labels = c("No", "Yes"))
-#alzdata <- subset(alzdata, select = -c(PatientID, DoctorInCharge))
-
+#alzdata <- alzdata[ , c("DietQuality", "Hypertension", "CholesterolLDL", "MMSE", "FunctionalAssessment", "MemoryComplaints", "BehavioralProblems", "ADL", "Diagnosis")]
 indices <- createDataPartition(alzdata$Diagnosis, p = 0.7, list = FALSE)
 train_dat <- alzdata[indices,]
 test_dat <- alzdata[-indices, ]
-
 ```
 
-``` {r singletree, message=FALSE, echo=FALSE}
-treemap <- tree(Diagnosis ~ ., data = train_dat)
+``` {r newtree, echo=FALSE}
+library(rpart)
+library(rpart.plot)
+
+# Use rpart for the model as it integrates well with rpart.plot
+treemap <- rpart(Diagnosis ~ ., data = train_dat)
 treemap$frame$yval <- ifelse(treemap$frame$yval == "Alzheimers", "Yes", "No")
-plot(treemap)
-text(treemap)
+
+# Use rpart.plot for a visually enhanced plot
+rpart.plot(treemap,
+           type = 3,           # Box style
+           extra = 0,        # Shows percentage of observations in each class
+           under = TRUE,       # Show the split label under the box
+           faclen = 1,         # Full names for factor levels
+           digits = 2,
+           fallen.leaves = TRUE, # Arrange the boxes in a more compact way
+           cex = 0.7,          # Text size
+           box.palette = "white", # Color palette for the boxes
+           #shadow.col = "gray" # Adds shadow to boxes
+)
 ```
 
 ``` {r stcm, echo=FALSE, message=FALSE, warning=FALSE}
 predictiontree <- predict(treemap, newdata = test_dat)
-predicted_labels <- ifelse(predictiontree[, "Alzheimers"] > 0.5, "Alzheimers", "No_Alzheimers")
+predicted_labels <- ifelse(predictiontree[, "Alzheimers"] > 0.35, "Alzheimers", "No_Alzheimers")
 confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis))
 Sensit1 <- confusion_matrix_singletree$byClass[["Sensitivity"]]
 Specif1 <- confusion_matrix_singletree$byClass[["Specificity"]]
@@ -166,14 +183,15 @@ F1_1 <- 2 * (precision1 * recall1) / (precision1 + recall1)
 
 
 ## Random Forest
-```{r rfB, message=FALSE, echo=FALSE}
+```{r rfB, message=FALSE, echo=FALSE, warning=FALSE}
 ntree_seq <- c(1, 50, 100, 400, 500, 700, 800, 900, 1000, 2000)
 max.ntree_seq <- max(ntree_seq)
 test_diagnosis <- test_dat[["Diagnosis"]]
-ranger_model <- ranger(Diagnosis ~ ., data = train_dat, num.trees = max.ntree_seq)
+ranger_model <- ranger(Diagnosis ~ ., data = train_dat, num.trees = max.ntree_seq, probability = TRUE)
 rand.forest.function <- function(x) { 
   predict_ranger <- predict(ranger_model, data = test_dat, num.trees = x)[["predictions"]]
-  CM <- confusionMatrix(test_diagnosis, predict_ranger)
+  predicted_labels <- ifelse(predict_ranger[, "Alzheimers"] > 0.35, "Alzheimers", "No_Alzheimers") |> as.factor()
+  CM <- confusionMatrix(test_diagnosis, predicted_labels)
   Sensit <- CM$byClass[["Sensitivity"]]
   Specif <- CM$byClass[["Specificity"]]
   Accura <- CM$overall[["Accuracy"]]
@@ -224,139 +242,64 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 
 ```
 
-# Challenges
+
+## Comparing Model Performance
+#### Model's ability to correctly classify positive cases
+
+``` {r LLR, echo=FALSE}
+#Lasso Logistic Regression
+
+
+```
+
+
+```{r modelcomparison, echo=FALSE}
+
+# Create the data frame
+data <- data.frame(
+  Model = c("Lasso", "kNN", "LDA", "Random Forest"),
+  Sensitivity = c(0.8544, 0.9532, 0.9876, 0.9055)
+)
+
+# Define colors for each bar
+colors <- c("Lasso" = "#E3DED1", "kNN" = "#99A88C", "LDA" = "#335C67", "Random Forest" = "#E09F3E")
+
+# Create the bar plot
+ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
+  geom_bar(stat = "identity", width = 0.6, show.legend = FALSE) + # Bars with no legend
+  geom_text(aes(label = Sensitivity), vjust = -0.5, size = 4) +   # Display data labels
+  scale_fill_manual(values = colors) +                            # Custom colors
+  labs(x = NULL, y = "Sensitivity") +                                       # Y-axis label
+  theme_minimal() +                                               # Minimal theme for a clean look
+  theme(
+    axis.text = element_text(size = 10),                          # Adjust text size
+    axis.title = element_text(size = 12)                          # Adjust axis title size
+  )
+
+```
+## Goal(s) Acheived
+- Found a right-size model with adequate performance
+- Created a foundational model for early detection
+- Identified key features that are associated with Alzheimer's
+
+
+## Challenges
 - Class imbalance in our dataset (addressed through probability)
 - Limited observation
 - Synthetic data
  
 
 # Pathway for deployment
-1. Acquiring real world data to test further 
-2. Keep a qualified clinical expert in the loop
-3. Investigate additional features associated with Alzheimer's
+
+## Next steps
+- Acquire real world data to test further 
+- Bring a qualified clinical expert in the loop
+- Investigate additional features associated with Alzheimer's
+
+
+# Thank You
 
 # Q&A
 
-
-## Quarto
-
-::: callout-note
-### Note title
-
-Note text
-:::
-
-::: callout-tip
-### Tip title
-
-Tip text
-:::
-
-::: callout-important
-### Important title
-
-Important text
-:::
-
-::: notes
-Speaker notes go here. Press `s` to see.
-:::
-
-::: footer
-Footers for comments, or links to further resources. These don't show up when printing the slides to pdf!
-:::
-
-
-# Layouts
-
-## Layout
-
-::: {layout-ncol="2"}
-### List One
-
--   [Item A]{.blue}
--   [Item B]{.red}
--   [Item C]{.purple}
--   Item D
-
-### List Two
-
--   **Item X**
--   *Item Y*
--   ~~Item Z~~
-:::
-
-## Columns (more customisable)
-
-::: columns
-::: {.column width="40%"}
-Left column
-:::
-
-::: {.column width="60%"}
-Right column
-:::
-:::
-
-## Plots: below code
-
-```{r}
-library(ggplot2)
-p1 = iris |> ggplot() +
-  aes(x = Petal.Length, y = Petal.Width, colour = Species) + 
-  geom_point(size = 4) + theme_classic(base_size = 20)
-p1
-```
-
-## Plots: hide code using `echo: false`
-
-```{r}
-#| echo: false
-p1
-```
-
-## Plots: auto two column using `output-location: column`
-
-```{r}
-#| output-location: column
-#| fig-height: 8
-p1 = iris |> ggplot() +
-  aes(x = Petal.Length, 
-      y = Petal.Width, 
-      colour = Species) + 
-  geom_point(size = 4) + 
-  theme_classic(base_size = 30)
-p1
-```
-
-## Bullets
-
-When you click the **Render** button a document will be generated that includes:
-
--   Content authored with markdown
--   Output from executable code
-
-. . .
-
-Reference @tidyverse
-
-## Code
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-## Handy R package
-
-The [`quartostamp`](https://matt-dray.github.io/quartostamp/index.html) R package provides RStudio "Addins" that make life easier for working with Quarto documents. It has a bunch of templates, e.g. for creating
-
--   callout blocks
--   columns
--   tabsets
--   footnotes
--   pauses
--   speaker notes...
 
 ## References

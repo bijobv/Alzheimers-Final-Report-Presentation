@@ -31,4 +31,4 @@ Disorientation,"Presence of disorientation, 0: No, 1: Yes",nominal
 PersonalityChanges,"Presence of personality changes, 0: No, 1: Yes",nominal
 DifficultyCompletingTasks,"Presence of difficulty completing tasks, 0: No, 1: Yes",nominal
 Forgetfulness,"Presence of forgetfulness, 0: No, 1: Yes",nominal
-Diagnosis ,"Diagnosis status for Alzheimer's Disease, 0: No, 1: Yes",nominal
+Diagnosis ,"Diagnosis status for Alzheimer's Disease, 1: Alzheimers, 2: No_Alzheimers",nominal
