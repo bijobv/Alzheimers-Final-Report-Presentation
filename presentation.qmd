@@ -16,7 +16,6 @@ format:
     scrollable: true
     pdf-max-pages-per-slide: 1
     history: false # don't add each slide to browser history
-    auto-slide: 20000
 bibliography: pres_bib.bib
 csl: apa-old-doi-prefix.csl
 execute:
@@ -99,14 +98,17 @@ kable(data, format = "html") %>%
 :::
 :::
 
-# Key Findings
+# Key Finding
 ## The Best Solution
 <br><br><br><br><br>
 
 **[Random Forest]{.red}** emerged as the best model with the highest Sensitivity
 
 - **Sensitivity** score is particularly important - indicates the performance in correctly classifying positive cases. 
-- **96%** of the patients with Alzheimer's are correctly identified by our model.
+- **86%** of the patients with Alzheimer's are correctly identified by our model.
+- Few key things to look for in a patient are - Functional Assessment score, ADL and MMSE
+
+
 
 # Our Approach
 ## Four Models Tested
@@ -257,12 +259,12 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 
 # Create the data frame
 data <- data.frame(
-  Model = c("Lasso", "kNN", "LDA", "Random Forest"),
-  Sensitivity = c(0.8544, 0.9532, 0.9876, 0.9055)
+  Model = c("Lasso", "kNN", "LDA", "100-tree Random Forest"),
+  Sensitivity = c(0.7575, 0.7588, 0.7237, 0.8612)
 )
 
 # Define colors for each bar
-colors <- c("Lasso" = "#E3DED1", "kNN" = "#99A88C", "LDA" = "#335C67", "Random Forest" = "#E09F3E")
+colors <- c("Lasso" = "#E3DED1", "kNN" = "#99A88C", "LDA" = "#335C67", "100-tree Random Forest" = "#E09F3E")
 
 # Create the bar plot
 ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
@@ -277,7 +279,7 @@ ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
   )
 
 ```
-## Goal(s) Acheived
+## Goals Acheived
 - Found a right-size model with adequate performance
 - Created a foundational model for early detection
 - Identified key features that are associated with Alzheimer's
@@ -295,9 +297,6 @@ ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
 - Acquire real world data to test further 
 - Bring a qualified clinical expert in the loop
 - Investigate additional features associated with Alzheimer's
-
-
-# Thank You
 
 # Q&A
 
