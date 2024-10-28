@@ -1,6 +1,6 @@
 ---
 title: "Alzheimers Disease Analysis"
-author: "Bijo Varghese, Hong Fu and Jessica Kentwell"
+author: "Jessica Kentwell, Bijo Varghese and Hong Fu"
 format:
   revealjs:
      # can set self-contained to false if not uploading to Canvas
@@ -104,9 +104,9 @@ kable(data, format = "html") %>%
 
 **[Random Forest]{.red}** emerged as the best model with the highest Sensitivity
 
-- **Sensitivity** score is particularly important - indicates the performance in correctly classifying positive cases. 
-- **86%** of the patients with Alzheimer's are correctly identified by our model.
-- Few key things to look for in a patient are - Functional Assessment score, ADL and MMSE
+- **Sensitivity** score is important - indicates the performance in correctly classifying positive cases. 
+- **90%** of the patients with Alzheimer's are correctly identified by our model.
+- Few key things to look for in a patient are - **Functional Assessment score**, **ADL** and **MMSE**
 
 
 
@@ -114,20 +114,29 @@ kable(data, format = "html") %>%
 ## Four Models Tested
 
 ::: columns
-::: {.column width="50%"}
-#### Lasso
-<img src="Lasso.jpg" class="knn-analogy" />
 
-#### $k$NN
+::: {.column width="33%"}
+<br>
+Imagine if you are trying to decide if you'll like a new movie.
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="32%"}
+#### 1. Lasso
+<img src="Lasso.png" class="knn-analogy" />
+
+#### 2. $k$NN
 <img src="kNN.jpg" class="knn-analogy" />
 :::
 
-::: {.column width="50%"}
-#### LDA
+::: {.column width="32%"}
+#### 3. LDA
 <img src="LDA.jpg" class="knn-analogy" />
 
-#### Random Forest
-<img src="Random_Forest.jpg" class="knn-analogy" />
+#### 4. Random Forest
+<img src="Random Forest.jpg" class="knn-analogy" />
 :::
 :::
 
@@ -169,7 +178,7 @@ rpart.plot(treemap,
 ``` {r stcm, echo=FALSE, message=FALSE, warning=FALSE}
 predictiontree <- predict(treemap, newdata = test_dat)
 predicted_labels <- ifelse(predictiontree[, "Alzheimers"] > 0.35, "Alzheimers", "No_Alzheimers")
-confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis))
+confusion_matrix_singletree <- confusionMatrix(as.factor(predicted_labels), as.factor(test_dat$Diagnosis), positive = "Alzheimers")
 Sensit1 <- confusion_matrix_singletree$byClass[["Sensitivity"]]
 Specif1 <- confusion_matrix_singletree$byClass[["Specificity"]]
 Accura1 <- confusion_matrix_singletree$overall[["Accuracy"]]
@@ -193,7 +202,7 @@ ranger_model <- ranger(Diagnosis ~ ., data = train_dat, num.trees = max.ntree_se
 rand.forest.function <- function(x) { 
   predict_ranger <- predict(ranger_model, data = test_dat, num.trees = x)[["predictions"]]
   predicted_labels <- ifelse(predict_ranger[, "Alzheimers"] > 0.35, "Alzheimers", "No_Alzheimers") |> as.factor()
-  CM <- confusionMatrix(test_diagnosis, predicted_labels)
+  CM <- confusionMatrix(test_diagnosis, predicted_labels, positive = "Alzheimers")
   Sensit <- CM$byClass[["Sensitivity"]]
   Specif <- CM$byClass[["Specificity"]]
   Accura <- CM$overall[["Accuracy"]]
@@ -260,7 +269,7 @@ ggplot(perf_measures_long, aes(x = factor(ntree_seq), y = Value, fill = Measure)
 # Create the data frame
 data <- data.frame(
   Model = c("Lasso", "kNN", "LDA", "100-tree Random Forest"),
-  Sensitivity = c(0.7575, 0.7588, 0.7237, 0.8612)
+  Sensitivity = c(0.7575, 0.8465, 0.8377, 0.8983)
 )
 
 # Define colors for each bar
@@ -280,25 +289,78 @@ ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
 
 ```
 ## Goals Acheived
-- Found a right-size model with adequate performance
-- Created a foundational model for early detection
-- Identified key features that are associated with Alzheimer's
+
+
+
+
+::: columns
+::: {.column width="33%"}
+<br><br><br><br>
+<img src="Goal1.jpg" class="knn-analogy" />
+<br>
+
+### 1
+#### Found a right-size model with adequate performance
+:::
+
+::: {.column width="33%"}
+<br><br><br><br>
+<img src="Goal2.jpg" class="knn-analogy" />
+<br>
+
+### 2
+#### Created a foundational model for early detection
+:::
+
+::: {.column width="33%"}
+<br><br><br><br>
+<img src="Goal3.jpg" class="knn-analogy" />
+<br>
+
+### 3
+#### Identified key features that are associated with Alzheimer's
+:::
+:::
 
 
 ## Challenges
-- Class imbalance in our dataset (addressed through probability)
-- Limited observation
-- Synthetic data
- 
+::: columns
+::: {.column width="45%"}
+<br><br><br><br><br><br><br>
 
+- **Class imbalance** in our dataset - addressed through probability
+- **Limited observation**
+- **Synthetic data**
+:::
+
+::: {.column width="5%"}
+::: 
+
+::: {.column width="50%"}
+<br><br><br>
+<img src="Challenge.jpg" class="challenge" />
+:::
+:::
 # Pathway for deployment
 
 ## Next steps
-- Acquire real world data to test further 
-- Bring a qualified clinical expert in the loop
-- Investigate additional features associated with Alzheimer's
+
+::: columns
+::: {.column width="45%"}
+<br><br><br><br><br>
+
+- Acquire **real world data** to test the model performance further 
+- Bring a **qualified clinical expert** in the loop for validation
+- Investigate **additional features** associated with Alzheimer's 
+:::
+
+::: {.column width="5%"}
+::: 
+
+::: {.column width="50%"}
+<br><br><br><br>
+<img src="Next Steps.jpg" class="challenge" />
+:::
+:::
 
 # Q&A
-
-
-## References
