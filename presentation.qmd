@@ -358,7 +358,7 @@ ggplot(data, aes(x = Model, y = Sensitivity, fill = Model)) +
 ::: 
 
 ::: {.column width="50%"}
-<br><br><br><br>
+<br><br><br>
 <img src="Next Steps.jpg" class="challenge" />
 :::
 :::
